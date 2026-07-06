@@ -1,0 +1,91 @@
+#bot2048-panel {
+  background: #8f7a66;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 0;
+  color: #fff;
+  font-family: Roboto, Arial, sans-serif;
+  user-select: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+}
+#bot2048-panel * { box-sizing: border-box; }
+#bot2048-panel .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+#bot2048-panel .title {
+  font-size: 13px;
+  font-weight: 900;
+}
+#bot2048-panel .badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eee4da;
+  color: #776e65;
+}
+#bot2048-panel .badge.on { background: #edc53f; color: #fff; }
+#bot2048-panel .badge.err { background: #f65e3b; color: #fff; }
+#bot2048-panel .stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+  font-size: 10px;
+  text-align: center;
+}
+#bot2048-panel .stat {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  padding: 4px;
+}
+#bot2048-panel .stat b { display: block; font-size: 13px; }
+#bot2048-panel .ctrl-row {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 10px;
+}
+#bot2048-panel .ctrl-label {
+  font-weight: 700;
+}
+#bot2048-panel .speed,
+#bot2048-panel .expert {
+  width: 100%;
+  accent-color: #edc53f;
+}
+#bot2048-panel .ctrl-val {
+  min-width: 88px;
+  text-align: right;
+  font-weight: 700;
+  font-size: 9px;
+  line-height: 1.2;
+}
+#bot2048-panel .btns { display: flex; gap: 6px; }
+#bot2048-panel button {
+  flex: 1;
+  border: none;
+  border-radius: 4px;
+  padding: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+}
+#bot2048-panel button:disabled { opacity: 0.45; cursor: not-allowed; }
+#bot2048-panel .start { background: #6a5a4d; }
+#bot2048-panel .stop { background: #f65e3b; }
+#bot2048-panel .hint {
+  margin-top: 5px;
+  font-size: 9px;
+  opacity: 0.9;
+  min-height: 12px;
+}
