@@ -10,15 +10,15 @@
 
   function loadExpert() {
     const saved = localStorage.getItem(EXPERT_KEY);
-    if (saved != null) return clampExpert(parseInt(saved, 10) || 5);
+    if (saved != null) return clampExpert(parseInt(saved, 10) || 8);
     const legacy = localStorage.getItem(OLD_POWER_KEY);
-    if (legacy != null) return clampExpert([2, 5, 7, 10][parseInt(legacy, 10)] || 5);
-    return 5;
+    if (legacy != null) return clampExpert([2, 5, 7, 10][parseInt(legacy, 10)] || 8);
+    return 8;
   }
 
   function expertToAi(level) {
-    const depth = Math.min(8, 3 + Math.floor(((level - 1) * 5) / 9));
-    const timeLimit = Math.round(40 + ((level - 1) * 360) / 9);
+    const depth = Math.min(10, 4 + Math.floor(((level - 1) * 6) / 9));
+    const timeLimit = Math.round(150 + ((level - 1) * 850) / 9);
     return { depth, timeLimit, level, label: `L${level}` };
   }
 
@@ -37,7 +37,7 @@
   }
 
   let running = false;
-  let delay = clampDelay(parseFloat(localStorage.getItem(DELAY_KEY) || "150") || 150);
+  let delay = clampDelay(parseFloat(localStorage.getItem(DELAY_KEY) || "100") || 100);
   let expert = loadExpert();
   let moves = 0;
   let gameActive = false;
@@ -103,7 +103,21 @@
     return !!getGameContext();
   }
 
-  function readBoard() {
+  function readBoardFromManager() {
+    const gm = getManager();
+    if (!gm?.grid?.cells) return null;
+
+    const grid = new Array(16).fill(0);
+    for (let x = 0; x < 4; x++) {
+      for (let y = 0; y < 4; y++) {
+        const tile = gm.grid.cells[x]?.[y];
+        if (tile?.value) grid[y * 4 + x] = tile.value;
+      }
+    }
+    return grid.some((v) => v > 0) ? grid : null;
+  }
+
+  function readBoardFromDom() {
     const ctx = getGameContext();
     if (!ctx) return null;
 
@@ -121,6 +135,25 @@
     });
 
     return grid.some((v) => v > 0) ? grid : null;
+  }
+
+  function readBoard() {
+    return readBoardFromManager() || readBoardFromDom();
+  }
+
+  function boardsEqual(a, b) {
+    if (!a || !b) return false;
+    for (let i = 0; i < 16; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  async function waitForStableBoard(before) {
+    for (let i = 0; i < 20; i++) {
+      await waitBetweenMoves(i === 0 ? 0 : 16);
+      const next = readBoard();
+      if (next && (!before || !boardsEqual(before, next))) return next;
+    }
+    return readBoard();
   }
 
   function readScore() {
@@ -338,8 +371,18 @@
         break;
       }
 
+      const gridBefore = readBoard();
       const aiOpts = getAiOptions();
       const aiResult = AI.bestMove(grid, aiOpts);
+      if (aiResult.direction == null) {
+        for (const d of [3, 2, 1, 0]) {
+          const { moved } = Board.move(grid, d);
+          if (moved) {
+            aiResult.direction = d;
+            break;
+          }
+        }
+      }
       if (aiResult.direction == null) {
         running = false;
         setStatus("Stuck", "err");
@@ -363,19 +406,9 @@
         `${ctx.mode} · ${formatSpeed(delay)} speed · ${formatExpertLabel(aiOpts)} · thought ${Math.round(aiResult.ms)}ms`
       );
       await waitBetweenMoves(delay);
-
-      if (delay <= 0) {
-        let ready = false;
-        for (let i = 0; i < 8 && running; i++) {
-          await waitBetweenMoves(0);
-          if (readBoard()) {
-            ready = true;
-            break;
-          }
-        }
-        if (!ready) {
-          setHint("Waiting for board update...");
-        }
+      const stable = await waitForStableBoard(gridBefore);
+      if (!stable) {
+        setHint("Waiting for board update...");
       }
     }
   }
